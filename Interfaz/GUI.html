@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compilador OakLand</title>
+    <link rel="stylesheet" href="Estilo_GUI.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h3>Compilador de OakLand</h3>
+            <button onclick="addTab()">Añadir Pestaña</button>
+            <button onclick="document.getElementById('file-input').click()">Abrir Archivo</button>
+            <button onclick="GuardarArchivo()">Guardar Archivo</button>
+            <button onclick="Ejecutar()">Ejecutar</button>
+            <button onclick="ReporteErrores()">Reporte de Errores</button>
+            <button onclick="ReporteSimbolos()">Reporte de Tabla de Simbolos</button>
+            <input type="file" id="file-input" style="display:none" accept=".oak" onchange="loadFile(event)">
+        </div>
+        <div class="content">
+            <div id="tabs-container"></div>
+            <div class="consola">
+                <h3>Consola de Salida</h3>
+                <div id="output"></div>
+            </div>    
+        </div>
+    </div>
+
+    <script type="module" src="Codigo_GUI.js"></script>
+    <script type="module">
+        import { addTab, GuardarArchivo, Ejecutar, loadFile, ReporteErrores, ReporteSimbolos } from './Codigo_GUI.js';
+
+        window.addTab = addTab;
+        window.GuardarArchivo = GuardarArchivo;
+        window.Ejecutar = Ejecutar;
+        window.loadFile = loadFile;
+        window.ReporteErrores = ReporteErrores;
+        window.ReporteSimbolos = ReporteSimbolos;
+        
+    </script>
+
+    <script src="https://unpkg.com/peggy"></script>
+    <script src="https://cdn.jsdelivr.net/npm/peggy"></script>
+</body>
+</html>
