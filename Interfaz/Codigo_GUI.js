@@ -7,6 +7,7 @@ import Instr_Break from "../Instrucciones/Instr_Break.js";
 import Instr_Continue from "../Instrucciones/Instr_Continue.js";
 import Instr_DeclaracionStruct from "../Instrucciones/Instr_DeclaracionStruct.js";
 import Instr_Funcion from "../Instrucciones/Instr_Funcion.js";
+import { RiscVGenerator } from "../Ensamblador/RiscVGenerator.js";
 
 let tabCount = 0;
 let tabsData = {};
@@ -98,6 +99,7 @@ export function Ejecutar(){
 
         const ast = new Arbol(resultado);
         const tabla = new TablaSimbolos();
+        const generador = new RiscVGenerator();
         ListaErrores = [];
         ListaSimbolos = [];
         numeroError = 0;
@@ -107,6 +109,7 @@ export function Ejecutar(){
 
         console.log(resultado);
 
+        /* 
         for (let element of resultado) {
 
             if(element instanceof Instr_Break){
@@ -145,13 +148,43 @@ export function Ejecutar(){
             }
             
         }
+        */
 
-        console.log(ListaSimbolos);
+        for (let element of resultado){
+
+            if(element instanceof Instr_Break){
+                let error = new Errores("Semantico", "Break fuera de ciclo", element.Linea, element.Columna);
+                ListaErrores.push(error);
+                continue;
+            }
+
+            if(element instanceof Instr_Continue){
+                let error = new Errores("Semantico", "Continue fuera de ciclo", element.Linea, element.Columna);
+                ListaErrores.push(error);
+                continue;
+            }
+
+            if(element instanceof Errores){
+                ListaErrores.push(element);
+                continue;
+            }
+
+            let res = element.Traducir(ast, tabla, generador);
+
+            if(res instanceof Errores){
+                ListaErrores.push(res);
+            }
+
+        }
+
+        //console.log(ListaSimbolos);
         
-        let Consola = ast.getConsola();
+        let Consola = generador.toString();
+        /* 
         ListaErrores.forEach((element) => {
             Consola += `Error ${++numeroError} - ` + element.toString() + "\n";
         });
+        */
         document.getElementById('output').innerText = Consola;
         
     } else {
