@@ -14,6 +14,8 @@ class Nativo extends Expresion{
         return this.Valor;
     }
 
+    
+
     // METODO USADO EN EL PROYECTO 2 PARA TRADUCIR LOS NATIVOS
     Traducir(arbol, tabla, gen){
         gen.addComment('Inicio de la funcion nativa');

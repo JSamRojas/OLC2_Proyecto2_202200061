@@ -29,7 +29,7 @@ export const registros = {
     S11: 's11',
     T3: 't3',
     T4: 't4',
-    T5: 't5',
+    NULL: 't5',
     HP: 't6',
 }
 
@@ -39,7 +39,7 @@ export const float_registros = {
     FT2: 'ft2',
     FT3: 'ft3',
     FT4: 'ft4',
-    FT5: 'ft5',
+    FNULL: 'ft5',
     FT6: 'ft6',
     FT7: 'ft7',
     FS0: 'fs0',
@@ -65,7 +65,7 @@ export const float_registros = {
     FT8: 'ft8',
     FT9: 'ft9',
     FT10: 'ft10',
-    FT11: 'ft11',
+    FZERO: 'ft11',
 }
 
 export const sysCalls = {

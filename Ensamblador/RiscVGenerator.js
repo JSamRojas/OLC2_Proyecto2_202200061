@@ -49,7 +49,7 @@ export class RiscVGenerator {
     }
 
     addLabel(label){
-        label = label || this.newLabel();
+        label = label || this.getLabel();
         this.Codigo.push(`${label}:\n`);
         return label;
     }
@@ -96,6 +96,18 @@ export class RiscVGenerator {
         this.Codigo.push(new RiscVInstrucciones("addi", rd, rs1, inmediato));
     }
 
+// -------------------------------------> Operaciones logicas <-------------------------------------
+
+    // and (and)
+    and(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('and', rd, rs1, rs2));
+    }
+
+    // or (or)
+    or(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('or', rd, rs1, rs2));
+    }
+
 // -------------------------------------> Instrucciones de carga (valor y memoria) <-------------------------------------
 
     // sw (store word)
@@ -138,6 +150,11 @@ export class RiscVGenerator {
     // Beq (Branch Equal) || ==
     beq(op1, op2, etiqueta){
         this.Codigo.push(new RiscVInstrucciones('beq', op1, op2, etiqueta));
+    }
+
+    // Beqz (Branch Equal Zero) || == 0
+    beqz(op1, etiqueta){
+        this.Codigo.push(new RiscVInstrucciones('beqz', op1, etiqueta));
     }
 
     // Bne (Branch Not Equal) || !=
@@ -212,48 +229,14 @@ export class RiscVGenerator {
         this.addi(r.SP, r.SP, 4);  // 4 bytes = 32 bits (retroceder en la pila)
     }
 
-// -------------------------------------> Instrucciones variadas <-------------------------------------
-
-    // call Function
-    callFunction(functionName){
-        if(!functions[functionName]){
-            throw new Error(`La función ${functionName} no existe`);
-        }
-        this._usedFuncion.add(functionName);
-        this.jal(functionName);
+    // para obtener el ultimo objeto en el stack
+    getTopObject(){
+        return this.objectStack[this.objectStack.length - 1];
     }
 
-    // print INTEGER
-    print_INT(rd = r.A0){
-        if(rd !== r.A0){
-            this.push(r.A0);
-            this.add(r.A0, rd, r.ZERO);
-        }
-
-        this.li(r.A7, 1);
-        this.sysCall();
-
-        if(rd !== r.A0){
-            this.pop(r.A0);
-        }
-
-    }
-
-    // print STRING
-    print_STRING(rd = r.A0){
-
-        if(rd !== r.A0){
-            this.push(r.A0);
-            this.add(r.A0, rd, r.ZERO);
-        }
-
-        this.li(r.A7, 4);
-        this.sysCall();
-
-        if(rd !== r.A0){
-            this.pop(r.A0);
-        }
-
+    // push objeto a la pila del compilador
+    pushObject(object){
+        this.objectStack.push({...object, depth: this.depth});
     }
 
     // push constante
@@ -298,8 +281,22 @@ export class RiscVGenerator {
                 length = 4;
                 break;
             
-                default:
-                    break;
+            case "CARACTER":
+
+                this.addComment(`Agregando caracter ${objeto.valor}`);
+                this.li(r.T0, objeto.valor.charCodeAt(0));
+                this.push(r.T0);
+                length = 4;
+                break;
+            
+            case "VOID":
+
+                this.push(r.NULL);
+                length = 4;
+                break;
+            
+            default:
+                break;
         }
 
         this.pushObject({tipo: objeto.tipo, length, depth: this.depth});
@@ -317,6 +314,16 @@ export class RiscVGenerator {
                 break;
             
             case "CADENA":
+
+                this.pop(rd);
+                break;
+            
+            case "VOID":
+
+                this.pop(rd);
+                break;
+            
+            case "CARACTER":
 
                 this.pop(rd);
                 break;
@@ -341,14 +348,101 @@ export class RiscVGenerator {
 
     }
 
-    // para obtener el ultimo objeto en el stack
-    getTopObject(){
-        return this.objectStack[this.objectStack.length - 1];
+// -------------------------------------> Instrucciones variadas <-------------------------------------
+
+    // call Function
+    callFunction(functionName){
+        if(!functions[functionName]){
+            throw new Error(`La función ${functionName} no existe`);
+        }
+        this._usedFuncion.add(functionName);
+        this.jal(functionName);
     }
 
-    // push objeto a la pila del compilador
-    pushObject(object){
-        this.objectStack.push(object);
+    // print INTEGER
+    print_INT(rd = r.A0){
+        if(rd !== r.A0){
+            this.push(r.A0);
+            this.add(r.A0, rd, r.ZERO);
+        }
+
+        this.addComment("Comparando si no es null");
+
+        const esnull = this.getLabel();
+        const end = this.getLabel();
+
+        this.beq(r.A0, r.NULL, esnull);
+        this.li(r.A7, 1);
+        this.sysCall();
+        this.jump(end);
+        this.addLabel(esnull);
+        this.li(r.A7, 4);
+        this.sysCall();
+        this.addLabel(end);
+
+        if(rd !== r.A0){
+            this.pop(r.A0);
+        }
+
+        this.addComment("Fin de la impresion de un entero");
+
+    }
+
+    // print STRING
+    print_STRING(rd = r.A0){
+
+        if(rd !== r.A0){
+            this.push(r.A0);
+            this.add(r.A0, rd, r.ZERO);
+        }
+
+        this.addComment("Comparando si no es null");
+
+        const esnull = this.getLabel();
+        const end = this.getLabel();
+        
+        this.beq(r.A0, r.NULL, esnull);
+        this.li(r.A7, 4);
+        this.sysCall();
+        this.jump(end);
+        this.addLabel(esnull);
+        this.li(r.A7, 4);
+        this.sysCall();
+        this.addLabel(end);
+
+        if(rd !== r.A0){
+            this.pop(r.A0);
+        }
+
+        this.addComment("Fin de la impresion de una cadena");
+
+    }
+
+    // print CARACTER
+    print_CHAR(rd = r.A0){
+
+        if(rd !== r.A0){
+            this.push(r.A0);
+            this.add(r.A0, rd, r.ZERO);
+        }
+
+        this.addComment("Comparando si no es null");
+
+        const esnull = this.getLabel();
+        const end = this.getLabel();
+        
+        this.beq(r.A0, r.NULL, esnull);
+        this.li(r.A7, 11);
+        this.sysCall();
+        this.jump(end);
+        this.addLabel(esnull);
+        this.li(r.A7, 4);
+        this.sysCall();
+        this.addLabel(end);
+
+        if(rd !== r.A0){
+            this.pop(r.A0);
+        }
     }
 
     // convertir el codigo a cadena para poder ejecutarlo
@@ -366,6 +460,8 @@ export class RiscVGenerator {
         return `
 .data
         salto:   .string "\\n"
+        errordiv:  .string "Error: division por cero"
+        null:    .string "null"
         true:    .string "true"
         false:   .string "false"
         heap:
@@ -374,6 +470,9 @@ export class RiscVGenerator {
 
 # inicializando el heap pointer
     la ${r.HP}, heap
+    la ${r.NULL}, null    # servira para comparar si algun valor es null
+    fcvt.s.w ft5, t5    # convertir el valor de t5 a float (para saber si algun float es null)
+    fmv.s.x ft11, zero  # valor 0 en float (servira como el zero para los floats)
     
 main:
         
@@ -426,6 +525,24 @@ main:
 
     }
 
+    // se quiere agregar una variable a la pila del compilador (si existe se retorna false y no se agrega)
+    addObject(id, idDepth){
+        for(let i = this.objectStack.length - 1; i >= 0; i--){
+            if(this.objectStack[i].depth === idDepth){
+                if(this.objectStack[i].id === id){
+                    return false;
+                }
+            } else {
+                break;
+            }
+        }
+        return true;
+    }
+
+    // se obtiene la profundidad actual
+    getDepth(){
+        return this.depth;
+    }
 
 
 // -------------------------------------> Instrucciones de flotantes <-------------------------------------
@@ -465,6 +582,11 @@ main:
         this.Codigo.push(new RiscVInstrucciones('fmv.s', rd, rs1));
     }
 
+    // fmv.s.x (floating point move from integer)
+    fmvx(rd, rs1){
+        this.Codigo.push(new RiscVInstrucciones('fmv.s.x', rd, rs1));
+    }
+
     // flw (floating point load word)
     flw(rd, rs1, inmediato = 0){
         this.Codigo.push(new RiscVInstrucciones('flw', rd, `${inmediato}(${rs1})`));
@@ -480,6 +602,26 @@ main:
         this.Codigo.push(new RiscVInstrucciones('fcvt.s.w', rd, rs1));
     }
 
+    // fcvt.w.s (floating point convert word to single)
+    fcvtws(rd, rs1){
+        this.Codigo.push(new RiscVInstrucciones('fcvt.w.s', rd, rs1));
+    }
+
+    //flt (floating point less than)
+    flt(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('flt.s', rd, rs1, rs2));
+    }
+
+    // fle (floating point less or equal)
+    fle(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('fle.s', rd, rs1, rs2));
+    }
+
+    // feq (floating point equal)
+    feq(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('feq.s', rd, rs1, rs2));
+    }
+
     // pop float
     popFloat(rd = fr.FT0){
         this.flw(rd, r.SP);
@@ -487,8 +629,29 @@ main:
     }
 
     printFloat(){
+
+        const Nonull = this.getLabel();
+        const end = this.getLabel();
+
+        this.addComment("Comparando si no es null");
+
+        this.push(r.A0);
+        this.mv(r.A0, r.NULL);
+
+        this.feq(r.T4, fr.FA0, fr.FNULL);
+        this.beq(r.T4, r.ZERO, Nonull);
+
+        this.li(r.A7, 4);
+        this.sysCall();
+        this.jump(end);
+        this.addLabel(Nonull);
         this.li(r.A7, 2);
         this.sysCall();
+        this.addLabel(end);
+        this.pop(r.A0);
+
+        this.addComment("Fin de la impresion de un decimal");
+
     }
 
 }

@@ -178,6 +178,7 @@ export function Ejecutar(){
         }
 
         //console.log(ListaSimbolos);
+        console.log(generador.objectStack);
         
         let Consola = generador.toString();
         /* 
@@ -185,7 +186,20 @@ export function Ejecutar(){
             Consola += `Error ${++numeroError} - ` + element.toString() + "\n";
         });
         */
+
+        const blobASM = new Blob([Consola], { type: 'text/plain' });
+
+        const linkASM = document.createElement('a');
+        linkASM.href = URL.createObjectURL(blobASM);
+        linkASM.download = 'TraduccionP2.asm';
+        
+        document.body.appendChild(linkASM);
+        linkASM.click();
+
+        document.body.removeChild(linkASM);
+
         document.getElementById('output').innerText = Consola;
+
         
     } else {
         document.getElementById('output').innerText = 'No hay una pestaña activa.';

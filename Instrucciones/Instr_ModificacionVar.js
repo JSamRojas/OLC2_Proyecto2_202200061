@@ -1,10 +1,11 @@
 import Instruccion from "../Abstracto/Instruccion.js";
-import Arbol from "../Simbolo/Arbol.js";
-import TablaSimbolos from "../Simbolo/TablaSimbolos.js";
 import DatoNativo from "../Simbolo/DatoNativo.js";
 import Errores from "../Simbolo/Errores.js";
 import Tipo from "../Simbolo/Tipo.js";
-import Simbolos from "../Simbolo/Simbolos.js";
+import { registros as r, float_registros as fr } from "../Ensamblador/RiscVConstantes.js";
+import { RiscVGenerator } from "../Ensamblador/RiscVGenerator.js";
+import TablaSimbolos from "../Simbolo/TablaSimbolos.js";
+
 
 class Instr_ModificacionVar extends Instruccion{
     constructor(ID, expresion, modificador, Linea, Columna){
@@ -15,6 +16,7 @@ class Instr_ModificacionVar extends Instruccion{
 
     }
 
+    // METODO USADO EL PROYECTO 1 PARA MODIFICAR VARIABLES
     Interpretar(arbol, tabla){
         let variable = tabla.getVariable(this.ID);
         if(variable === null){
@@ -236,6 +238,114 @@ class Instr_ModificacionVar extends Instruccion{
 
         }
 
+        return null;
+
+    }
+
+    /**
+     * @param {TablaSimbolos} tabla 
+     * @param {RiscVGenerator} gen 
+     */
+
+    Traducir(arbol, tabla, gen){
+
+        gen.addComment("Modificando la variable " + this.ID);
+
+        let variable = tabla.getVariable(this.ID);
+
+        // Si la variable no ha sido declarada, entonces se debe notificar el error
+        if(variable === null){
+
+            return new Errores("Semantico", "La variable " + this.ID + " no existe", this.Linea, this.Columna);
+        }
+
+        // Si la variable no es mutable, entonces se debe notificar el error
+        if(variable.Mutabilidad === false){
+            return new Errores("Semantico", "La variable " + this.ID + " es parte del foreach, por ende, no se puede modificar", this.Linea, this.Columna);
+        }
+
+        if(this.modificador === null){
+
+            let valorTraducido = this.expresion.Traducir(arbol, tabla, gen);
+
+            const typeObject = gen.getTopObject().tipo;
+            const [offset, varObject] = gen.getObject(this.ID);
+
+            if(valorTraducido instanceof Errores || valorTraducido === null){
+
+                /*
+                
+                Si la variable retorna algun error o el valor de null, antes de devolver el error, se debe asignar el valor null a la variable (este ya se encuentra en el top de la pila)
+
+                */
+
+                const valueNull = gen.popObject(r.T0);
+                gen.addi(r.T1, r.SP, offset);
+                gen.sw(r.T0, r.T1);
+
+                varObject.tipo = DatoNativo.VOID;
+
+                //gen.push(r.T0);
+                //gen.pushObject(valueNull);
+
+                gen.addComment("Fin de modificacion de la variable " + this.ID);
+                return valorTraducido;
+
+            }
+
+            // si la variable es de tipo void, no se puede acceder, por ende, se saca el valor que se le iba a asignar y se retorna un error
+            if(varObject.tipo === "VOID"){
+                const valueNull = gen.popObject(r.T0);
+                return new Errores("Semantico", "La variable " + this.ID + " es inaccesible porque tiene valor null", this.Linea, this.Columna);
+            }
+
+            if(variable.getTipoEstruct() === "Variable"){
+
+                if(varObject.tipo !== typeObject){
+
+                    if(varObject.tipo === "DECIMAL" && typeObject === "ENTERO"){
+
+                        gen.addComment("Conversion implicita de entero a decimal");
+                        const valObjeto = gen.popObject(r.T0);
+                        const [Floatoffset, varObject] = gen.getObject(this.ID);
+                        gen.fcvtsw(fr.FT0, r.T0);
+
+                        gen.addi(r.T1, r.SP, Floatoffset);
+                        gen.fsw(fr.FT0, r.T1);
+
+                        gen.addComment("Fin de conversion");
+
+                    } else {
+
+                        const valueNull = gen.popObject(r.T0);
+                        const [Newoffset, NewvarObject] = gen.getObject(this.ID);
+                        gen.addi(r.T1, r.SP, Newoffset);
+                        gen.sw(r.NULL, r.T1);   // se asigna el valor null a la variable, ya que los tipos son diferentes, es un error
+                        NewvarObject.tipo = DatoNativo.VOID;
+                        return new Errores("Semantico", "La variable es de tipo " + NewvarObject.tipo + " y el valor asignado es de tipo " + typeObject.tipo, this.Linea, this.Columna);
+
+                    }
+
+                } else {
+                    
+                        if(varObject.tipo === "DECIMAL"){
+                            gen.popObject(fr.FT0);
+                            const [Floatoffset, varObject] = gen.getObject(this.ID);
+                            gen.addi(r.T1, r.SP, Floatoffset);
+                            gen.fsw(fr.FT0, r.T1);
+                        } else {
+                            const valObjeto = gen.popObject(r.T0);
+                            const [Newoffset, NewvarObject] = gen.getObject(this.ID);
+                            gen.addi(r.T1, r.SP, Newoffset);
+                            gen.sw(r.T0, r.T1);
+                        }
+                }
+
+            }
+
+        }
+
+        gen.addComment("Fin de modificacion de la variable " + this.ID);
         return null;
 
     }

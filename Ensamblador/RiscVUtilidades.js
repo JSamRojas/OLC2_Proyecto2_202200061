@@ -28,6 +28,7 @@ export const stringTo32BitArray = (str) => {
 export const stringTo1ByteArray = (str) => {
     const resultado = [];
     let index = 0;
+    str = str.replace(/\\n/g, "\n");
 
     while(index < str.length){
         resultado.push(str.charCodeAt(index));

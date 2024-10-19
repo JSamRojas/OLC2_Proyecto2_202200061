@@ -34,7 +34,10 @@ class Instr_Sout extends Instruccion {
         gen.addComment("Inicio del print");
         for(let element of this.expresion){
             let resultado = element.Traducir(arbol, tabla, gen);
-            if (resultado instanceof Errores) return resultado;
+            if (resultado instanceof Errores) {
+                gen.popObject(r.T0);
+                return resultado;
+            }
             
             const isFloat = gen.getTopObject().tipo === DatoNativo.DECIMAL;
             const object = gen.popObject(isFloat ? fr.FA0 : r.A0);
@@ -43,6 +46,9 @@ class Instr_Sout extends Instruccion {
                 "ENTERO": () => gen.print_INT(),
                 "DECIMAL": () => gen.printFloat(),
                 "CADENA": () => gen.print_STRING(),
+                "CARACTER": () => gen.print_CHAR(),
+                "BOOLEANO": () => gen.callFunction("Print_BOOLEAN"),
+                "VOID": () => gen.print_STRING(),
             }
 
             TypePrint[object.tipo]();
