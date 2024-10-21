@@ -1,9 +1,5 @@
 import Instruccion from "../Abstracto/Instruccion.js";
-import Arbol from "../Simbolo/Arbol.js";
-import TablaSimbolos from "../Simbolo/TablaSimbolos.js";
 import DatoNativo from "../Simbolo/DatoNativo.js";
-import Errores from "../Simbolo/Errores.js";
-import Instr_DeclaracionVar from "./Instr_DeclaracionVar.js";
 import Tipo from "../Simbolo/Tipo.js";
 
 class Instr_Break extends Instruccion {
@@ -13,6 +9,11 @@ class Instr_Break extends Instruccion {
 
     Interpretar(arbol, tabla){
         return null;
+    }
+
+    Traducir(arbol, tabla, gen){
+        gen.addComment("Break");
+        return 1;
     }
 
 }

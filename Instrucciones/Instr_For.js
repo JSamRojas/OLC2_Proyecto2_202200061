@@ -119,7 +119,12 @@ class Instr_For extends Instruccion {
 
         const StartFor = gen.getLabel();
         const EndFor = gen.getLabel();
+        const prevBreakLabel = gen.LabelBreak;
+        gen.LabelBreak = EndFor;
+
         const IncrementFor = gen.getLabel();
+        const prevContinueLabel = gen.LabelContinue;
+        gen.LabelContinue = IncrementFor;
 
         gen.addLabel(StartFor);
         gen.addComment("Condicion del For");
@@ -143,6 +148,14 @@ class Instr_For extends Instruccion {
                 return null;
             }
 
+            if(i instanceof Instr_Break){
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(i instanceof Instr_Continue){
+                gen.jump(gen.LabelContinue);
+            }
+
             let resultado = i.Traducir(arbol, newTabla, gen);
 
             if(resultado instanceof Errores){
@@ -150,6 +163,14 @@ class Instr_For extends Instruccion {
                 this.ReduceScope(gen);
                 this.ReduceScope(gen);
                 return resultado;
+            }
+
+            if(resultado instanceof Instr_Break){
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(resultado instanceof Instr_Continue){
+                gen.jump(gen.LabelContinue);
             }
 
         }
@@ -168,6 +189,10 @@ class Instr_For extends Instruccion {
         gen.addLabel(EndFor);
         this.ReduceScope(gen);
         gen.addComment("Fin de la sentencia For");
+
+        gen.LabelBreak = prevBreakLabel;
+        gen.LabelContinue = prevContinueLabel;
+
         return null;
 
     }

@@ -28,6 +28,8 @@ export class RiscVGenerator {
         this.Codigo = [];
         this._labelCounter = 0;
         this._usedFuncion = new Set();
+        this.LabelBreak = null;
+        this.LabelContinue = null;
     }
 
     getCode(){
@@ -79,6 +81,11 @@ export class RiscVGenerator {
     // div (divide)
     div(rd, rs1, rs2){
         this.Codigo.push(new RiscVInstrucciones('div', rd, rs1, rs2));
+    }
+
+    // divu (divide unsigned)
+    divu(rd, rs1, rs2){
+        this.Codigo.push(new RiscVInstrucciones('divu', rd, rs1, rs2));
     }
 
     // rem (module)
@@ -160,6 +167,11 @@ export class RiscVGenerator {
     // Bne (Branch Not Equal) || !=
     bne(op1, op2, etiqueta){
         this.Codigo.push(new RiscVInstrucciones('bne', op1, op2, etiqueta));
+    }
+
+    // bnez (Branch Not Equal Zero) || != 0
+    bnez(op1, etiqueta){
+        this.Codigo.push(new RiscVInstrucciones('bnez', op1, etiqueta));
     }
 
     // Blt (Branch Less Than) || <
@@ -461,7 +473,13 @@ export class RiscVGenerator {
 .data
         salto:   .string "\\n"
         errordiv:  .string "Error: division por cero"
+        errorcadena: .string "Error: La cadena no puede ser convertida a entero/float"
         null:    .string "null"
+        entero:  .string "int"
+        decimal: .string "float"
+        cadena:  .string "string"
+        caracter: .string "char"
+        boolean: .string "boolean"
         true:    .string "true"
         false:   .string "false"
         heap:

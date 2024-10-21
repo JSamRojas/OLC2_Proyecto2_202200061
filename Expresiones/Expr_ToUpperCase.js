@@ -1,9 +1,9 @@
 import Expresion from "../Abstracto/Expresion.js";
-import Arbol from "../Simbolo/Arbol.js";
-import TablaSimbolos from "../Simbolo/TablaSimbolos.js";
 import DatoNativo from "../Simbolo/DatoNativo.js";
 import Errores from "../Simbolo/Errores.js";
 import Tipo from "../Simbolo/Tipo.js";
+import { registros as r, float_registros as fr } from "../Ensamblador/RiscVConstantes.js";
+import { RiscVGenerator } from "../Ensamblador/RiscVGenerator.js";
 
 class Expr_ToUpperCase extends Expresion {
     constructor(expresion, Linea, Columna){
@@ -11,6 +11,7 @@ class Expr_ToUpperCase extends Expresion {
         this.expresion = expresion;
     }
 
+    // METODO UTILIZADO EN EL PROYECTO 1 PARA CONVERTIR UNA CADENA A MAYUSCULAS
     Interpretar(arbol, tabla) {
                 
         let valor = this.expresion.Interpretar(arbol, tabla);
@@ -28,6 +29,40 @@ class Expr_ToUpperCase extends Expresion {
         }
 
         return valor.toUpperCase();
+    }
+
+    // METODO UTILIZADO EN EL PROYECTO 2 PARA TRADUCIR LA CONVERSION DE UNA CADENA A MAYUSCULAS A RISCV
+    /**
+     * @param {RiscVGenerator} gen 
+    */
+    Traducir(arbol, tabla, gen){
+
+        gen.addComment("Convirtiendo una cadena a mayusculas");
+        let valorTrad = this.expresion.Traducir(arbol, tabla, gen);
+
+        if(valorTrad instanceof Errores){
+            gen.popObject(r.T0);
+            return valorTrad;
+        }
+
+        if(valorTrad === null){
+            //gen.popObject(r.T0);
+            return null;
+        }
+
+        const typeExp = gen.getTopObject().tipo;
+        gen.popObject(r.T0);
+
+        if(typeExp !== "CADENA"){
+            return new Errores("Semantico", "La funcion toUpperCase solo acepta cadenas", this.Linea, this.Columna);
+        }
+
+        gen.add(r.A0, r.ZERO, r.T0);
+        gen.callFunction("UpperCase");
+        gen.pushObject({tipo: DatoNativo.CADENA, length: 4});
+
+        return 1;
+
     }
 
     esMatriz(array){

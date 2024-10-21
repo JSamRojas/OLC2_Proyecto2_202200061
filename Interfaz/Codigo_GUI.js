@@ -179,6 +179,7 @@ export function Ejecutar(){
 
         //console.log(ListaSimbolos);
         console.log(generador.objectStack);
+        console.log(generador.depth);
         
         let Consola = generador.toString();
         /* 
@@ -277,7 +278,6 @@ export function ReporteSimbolos(){
     HTML += "<th>Tipo (Estructura)</th>\n";
     HTML += "<th>Tipo (Dato)</th>\n";
     HTML += "<th>Entorno</th>\n";
-    HTML += "<th>Valor</th>\n";
     HTML += "<th>Linea</th>\n";
     HTML += "<th>Columna</th>\n";
     HTML += "</tr>\n";
@@ -289,7 +289,6 @@ export function ReporteSimbolos(){
         HTML += `<td>${element.getTipoEstruct()}</td>\n`;
         HTML += `<td>${element.getTipo().getTipo()}</td>\n`;
         HTML += `<td>${element.getEntorno()}</td>\n`;
-        HTML += `<td>${element.getValor()}</td>\n`;
         HTML += `<td>${element.getLinea()}</td>\n`;
         HTML += `<td>${element.getColumna()}</td>\n`;
         HTML += "</tr>\n";

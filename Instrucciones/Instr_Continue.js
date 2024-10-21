@@ -14,6 +14,11 @@ class Instr_Continue extends Instruccion {
     Interpretar(arbol, tabla){
         return null;
     }
+
+    Traducir(arbol, tabla, gen){
+        gen.addComment("Continue");
+        return 1;
+    }
 }
 
 export default Instr_Continue;

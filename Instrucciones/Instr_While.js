@@ -101,7 +101,12 @@ class Instr_While extends Instruccion {
         gen.newScope();
 
         const Startwhile = gen.getLabel();
+        const prevContinueLabel = gen.LabelContinue;
+        gen.LabelContinue = Startwhile;
+
         const Endwhile = gen.getLabel();
+        const prevBreakLabel = gen.LabelBreak;
+        gen.LabelBreak = Endwhile;
 
         gen.addLabel(Startwhile);
         gen.addComment("Condicion del while");
@@ -125,6 +130,16 @@ class Instr_While extends Instruccion {
                 return null;
             }
 
+            if(i instanceof Instr_Break){
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(i instanceof Instr_Continue){
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelContinue);
+            }
+
             let resultado = i.Traducir(arbol, newTabla, gen);
 
             if(resultado instanceof Errores){
@@ -134,6 +149,16 @@ class Instr_While extends Instruccion {
                 return resultado;
             }
 
+            if(resultado instanceof Instr_Break){
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(resultado instanceof Instr_Continue){
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelContinue);
+            }
+
         }
 
         this.ReduceScope(gen);
@@ -141,6 +166,10 @@ class Instr_While extends Instruccion {
         gen.addLabel(Endwhile);
         this.ReduceScope(gen);
         gen.addComment("Fin de la sentencia de control while");
+
+        gen.LabelContinue = prevContinueLabel;
+        gen.LabelBreak = prevBreakLabel;
+
         return null;
 
     }

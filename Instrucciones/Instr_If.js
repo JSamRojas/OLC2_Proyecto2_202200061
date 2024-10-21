@@ -156,6 +156,16 @@ class Instr_If extends Instruccion {
                 return null;
             }
 
+            if(element instanceof Instr_Break) {
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(element instanceof Instr_Continue) {
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelContinue);
+            }
+
             let resultado = element.Traducir(arbol, newTabla, gen);
 
             if(resultado instanceof Errores){
@@ -163,6 +173,16 @@ class Instr_If extends Instruccion {
                 gen.addLabel(endIfLabel);
                 this.ReduceScope(gen);
                 return resultado;
+            }
+
+            if(resultado instanceof Instr_Break) {
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelBreak);
+            }
+
+            if(resultado instanceof Instr_Continue) {
+                //this.ReduceScope(gen);
+                gen.jump(gen.LabelContinue);
             }
 
         }
@@ -180,6 +200,16 @@ class Instr_If extends Instruccion {
                     this.ReduceScope(gen);
                     return null;
                 }
+
+                if(element instanceof Instr_Break) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelBreak);
+                }
+
+                if(element instanceof Instr_Continue) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelContinue);
+                }
     
                 let resultado = element.Traducir(arbol, newTabla, gen);
     
@@ -187,6 +217,16 @@ class Instr_If extends Instruccion {
                     gen.addLabel(endIfLabel);
                     this.ReduceScope(gen);
                     return resultado;
+                }
+
+                if(resultado instanceof Instr_Break) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelBreak);
+                }
+
+                if(resultado instanceof Instr_Continue) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelContinue);
                 }
     
             }
@@ -200,6 +240,16 @@ class Instr_If extends Instruccion {
                     gen.addLabel(endIfLabel);
                     this.ReduceScope(gen);
                     return resultado;
+                }
+
+                if(resultado instanceof Instr_Break) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelBreak);
+                }
+
+                if(resultado instanceof Instr_Continue) {
+                    //this.ReduceScope(gen);
+                    gen.jump(gen.LabelContinue);
                 }
 
             }
